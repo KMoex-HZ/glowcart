@@ -1,13 +1,29 @@
-.env
+# Python
+.venv/
 __pycache__/
 *.pyc
 *.pyo
-.ipynb_checkpoints/
 *.egg-info/
 dist/
 build/
-.DS_Store
-*.log
-data/raw/
-.venv/
+
+# Data files (jangan push data ke GitHub)
+storage/bronze/
+storage/silver/
+storage/gold/
+
+# Airflow
 orchestration/airflow/
+
+# Environment
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
