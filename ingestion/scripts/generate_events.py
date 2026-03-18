@@ -4,7 +4,7 @@ import random
 import time
 from datetime import datetime
 
-fake = Faker('id_ID')  # Data Indonesia!
+fake = Faker('id_ID')
 
 PRODUCTS = [
     {"id": "P001", "name": "Sepatu Lari Nike", "price": 850000, "category": "Fashion"},
@@ -17,6 +17,7 @@ PRODUCTS = [
     {"id": "P008", "name": "Minyak Goreng 2L", "price": 35000, "category": "Food"},
 ]
 
+
 def generate_user():
     return {
         "user_id": fake.uuid4(),
@@ -25,6 +26,7 @@ def generate_user():
         "city": fake.city(),
         "age": random.randint(18, 55),
     }
+
 
 def generate_event(user):
     product = random.choice(PRODUCTS)
@@ -46,15 +48,16 @@ def generate_event(user):
         "platform": random.choice(["android", "ios", "web"]),
     }
 
+
 if __name__ == "__main__":
     print("GlowCart event generator started...")
     print("Generating e-commerce events:\n")
-    
+
     for i in range(10):
         user = generate_user()
         event = generate_event(user)
         print(json.dumps(event, indent=2, ensure_ascii=False))
         print("-" * 50)
         time.sleep(0.5)
-    
+
     print("\nDone! Generated 10 events.")

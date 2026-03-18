@@ -8,17 +8,21 @@ consumer = KafkaConsumer(
     value_deserializer=lambda v: json.loads(v.decode('utf-8'))
 )
 
-print("GlowCart Consumer started — membaca events dari Kafka...")
-print("Tekan Ctrl+C untuk stop\n")
+print("GlowCart Consumer started — reading events from Kafka...")
+print("Press Ctrl+C to stop\n")
 
 for message in consumer:
     event = message.value
-    print(f"Received [{message.offset}]: "
-          f"{event['event_type']} | "
-          f"{event['user']['name']} | "
-          f"{event['product']['name']} | "
-          f"Rp {event['total_amount']:,}" if event['total_amount'] else 
-          f"Received [{message.offset}]: "
-          f"{event['event_type']} | "
-          f"{event['user']['name']} | "
-          f"{event['product']['name']}")
+    print(
+        f"Received [{message.offset}]: "
+        f"{event['event_type']} | "
+        f"{event['user']['name']} | "
+        f"{event['product']['name']} | "
+        f"Rp {event['total_amount']:,}"
+        if event['total_amount']
+        else
+        f"Received [{message.offset}]: "
+        f"{event['event_type']} | "
+        f"{event['user']['name']} | "
+        f"{event['product']['name']}"
+    )
