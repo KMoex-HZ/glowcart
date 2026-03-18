@@ -11,6 +11,16 @@
 
 ---
 
+## Overview
+
+**GlowCart** adalah portfolio project data engineering end-to-end yang mensimulasikan platform analytics e-commerce Indonesia secara real-time. Project ini dibangun untuk mendemonstrasikan kemampuan membangun data pipeline modern — mulai dari ingestion, transformasi, orchestration, hingga serving dan visualisasi.
+
+Pipeline dimulai dari simulasi event pengguna (browsing, tambah ke keranjang, checkout, pembayaran) yang di-stream lewat **Apache Kafka**, lalu diproses melalui arsitektur **Medallion (Bronze → Silver → Gold)** menggunakan **PySpark** dan **dbt**, diorchestrasi dengan **Apache Airflow**, dan akhirnya disajikan lewat **FastAPI** dan dashboard **Chart.js** yang bisa diakses secara langsung.
+
+Seluruh stack berjalan secara lokal menggunakan **Docker Compose**, sehingga mudah direproduksi tanpa infrastruktur cloud.
+
+---
+
 ## Architecture
 
 ```mermaid
