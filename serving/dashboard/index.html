@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlowCart Analytics Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; }
+        header { background: #1e293b; padding: 20px 32px; border-bottom: 1px solid #334155; }
+        header h1 { font-size: 22px; font-weight: 600; color: #38bdf8; }
+        header p { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; padding: 32px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 24px; border: 1px solid #334155; }
+        .card h2 { font-size: 14px; font-weight: 500; color: #94a3b8; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 0 32px 32px; }
+        .stat { background: #1e293b; border-radius: 12px; padding: 20px 24px; border: 1px solid #334155; }
+        .stat .label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat .value { font-size: 28px; font-weight: 700; color: #38bdf8; margin-top: 8px; }
+        .stat .sub { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+        canvas { max-height: 280px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>GlowCart Analytics Dashboard</h1>
+    <p>Real-time e-commerce intelligence — powered by Kafka · Spark · dbt · DuckDB</p>
+</header>
+
+<div class="stat-grid" id="stats">
+    <div class="stat"><div class="label">Total Revenue</div><div class="value" id="stat-revenue">—</div><div class="sub">from successful payments</div></div>
+    <div class="stat"><div class="label">Total Orders</div><div class="value" id="stat-orders">—</div><div class="sub">payment_success events</div></div>
+    <div class="stat"><div class="label">Conversion Rate</div><div class="value" id="stat-conv">—</div><div class="sub">page view → purchase</div></div>
+    <div class="stat"><div class="label">Top Category</div><div class="value" id="stat-cat">—</div><div class="sub">by revenue</div></div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h2>Revenue by Category</h2>
+        <canvas id="revenueChart"></canvas>
+    </div>
+    <div class="card">
+        <h2>Conversion Funnel</h2>
+        <canvas id="funnelChart"></canvas>
+    </div>
+    <div class="card">
+        <h2>Top Products by Revenue</h2>
+        <canvas id="productsChart"></canvas>
+    </div>
+    <div class="card">
+        <h2>Hourly Activity</h2>
+        <canvas id="hourlyChart"></canvas>
+    </div>
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+const COLORS = ['#38bdf8','#34d399','#f472b6','#fb923c','#a78bfa','#facc15'];
+
+async function fetchAll() {
+    const [revenue, funnel, products, hourly] = await Promise.all([
+        fetch(`${API}/api/revenue`).then(r => r.json()),
+        fetch(`${API}/api/funnel`).then(r => r.json()),
+        fetch(`${API}/api/top-products`).then(r => r.json()),
+        fetch(`${API}/api/hourly-activity`).then(r => r.json()),
+    ]);
+
+    // Stats
+    const totalRevenue = revenue.data.reduce((s, d) => s + d.total_revenue, 0);
+    const totalOrders = revenue.data.reduce((s, d) => s + d.total_orders, 0);
+    const funnelData = funnel.data[0];
+    const convRate = funnelData ? (funnelData.conversion_rate_pct ?? '—') : '—';
+    const topCat = revenue.data[0]?.product_category ?? '—';
+
+    document.getElementById('stat-revenue').textContent = 'Rp ' + (totalRevenue/1e6).toFixed(1) + 'M';
+    document.getElementById('stat-orders').textContent = totalOrders;
+    document.getElementById('stat-conv').textContent = convRate + '%';
+    document.getElementById('stat-cat').textContent = topCat;
+
+    // Revenue by category
+    new Chart(document.getElementById('revenueChart'), {
+        type: 'bar',
+        data: {
+            labels: revenue.data.map(d => d.product_category),
+            datasets: [{ label: 'Revenue (Rp)', data: revenue.data.map(d => d.total_revenue), backgroundColor: COLORS }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } }
+    });
+
+    // Funnel
+    const funnelStages = ['page_view','add_to_cart','checkout','payment_success'];
+    const funnelCounts = funnelStages.map(s => funnel.data.find(d => d.stage === s)?.count ?? 0);
+    new Chart(document.getElementById('funnelChart'), {
+        type: 'bar',
+        data: {
+            labels: funnelStages,
+            datasets: [{ label: 'Events', data: funnelCounts, backgroundColor: ['#38bdf8','#34d399','#f472b6','#a78bfa'] }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } }
+    });
+
+    // Top products
+    new Chart(document.getElementById('productsChart'), {
+        type: 'bar',
+        data: {
+            labels: products.data.map(d => d.product_name),
+            datasets: [{ label: 'Revenue (Rp)', data: products.data.map(d => d.total_revenue), backgroundColor: COLORS }]
+        },
+        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } }
+    });
+
+    // Hourly
+    new Chart(document.getElementById('hourlyChart'), {
+        type: 'line',
+        data: {
+            labels: hourly.data.map(d => `${d.hour}:00`),
+            datasets: [{ label: 'Events', data: hourly.data.map(d => d.total_events), borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.1)', fill: true, tension: 0.4 }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } }
+    });
+}
+
+fetchAll().catch(console.error);
+</script>
+</body>
+</html>
