@@ -10,3 +10,4 @@ build/
 *.log
 data/raw/
 .venv/
+orchestration/airflow/
