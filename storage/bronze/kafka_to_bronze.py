@@ -14,7 +14,7 @@ consumer = KafkaConsumer(
     value_deserializer=lambda v: json.loads(v.decode('utf-8'))
 )
 
-print("Membaca events dari Kafka ke Bronze layer...")
+print("Reading events from Kafka into Bronze layer...")
 
 events = []
 for message in consumer:
@@ -50,11 +50,11 @@ if events:
     output_path = f'/root/glowcart/storage/bronze/events/date={date_str}/events.parquet'
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     df.to_parquet(output_path, index=False)
-    print(f"\n✅ Saved {len(df)} events ke Bronze layer")
+    print(f"\n✅ Saved {len(df)} events to Bronze layer")
     print(f"   Path: {output_path}")
-    print(f"\nSchema DataFrame:")
+    print(f"\nDataFrame schema:")
     print(df.dtypes)
     print(f"\nSample data:")
-    print(df[['event_type','user_name','product_name','total_amount']].head(5))
+    print(df[['event_type', 'user_name', 'product_name', 'total_amount']].head(5))
 else:
-    print("Tidak ada events ditemukan di Kafka.")
+    print("No events found in Kafka.")

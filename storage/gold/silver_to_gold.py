@@ -7,10 +7,10 @@ silver_path = f'/root/glowcart/storage/silver/events/date={date_str}/events.parq
 gold_dir = '/root/glowcart/storage/gold'
 os.makedirs(gold_dir, exist_ok=True)
 
-print("Membaca Silver layer...")
+print("Reading Silver layer...")
 df = pd.read_parquet(silver_path)
 
-# --- Tabel 1: Revenue per kategori produk ---
+# --- Table 1: Revenue by product category ---
 revenue_by_category = (
     df[df['event_type'] == 'payment_success']
     .groupby('product_category')
@@ -26,8 +26,7 @@ revenue_by_category.to_parquet(f'{gold_dir}/revenue_by_category.parquet', index=
 print("\n📊 Revenue by Category:")
 print(revenue_by_category.to_string(index=False))
 
-# --- Tabel 2: Conversion funnel ---
-total_sessions = df['session_id'].nunique()
+# --- Table 2: Conversion funnel ---
 funnel = pd.DataFrame({
     'stage': ['page_view', 'add_to_cart', 'checkout', 'payment_success'],
     'count': [
@@ -37,12 +36,14 @@ funnel = pd.DataFrame({
         len(df[df['event_type'] == 'payment_success']),
     ]
 })
-funnel['conversion_rate_pct'] = (funnel['count'] / funnel['count'].iloc[0] * 100).round(1)
+funnel['conversion_rate_pct'] = (
+    funnel['count'] / funnel['count'].iloc[0] * 100
+).round(1)
 funnel.to_parquet(f'{gold_dir}/conversion_funnel.parquet', index=False)
 print("\n📊 Conversion Funnel:")
 print(funnel.to_string(index=False))
 
-# --- Tabel 3: Top produk by revenue ---
+# --- Table 3: Top products by revenue ---
 top_products = (
     df[df['event_type'] == 'payment_success']
     .groupby(['product_id', 'product_name', 'product_category'])
@@ -58,7 +59,7 @@ top_products.to_parquet(f'{gold_dir}/top_products.parquet', index=False)
 print("\n📊 Top Products:")
 print(top_products.to_string(index=False))
 
-# --- Tabel 4: Aktivitas per jam ---
+# --- Table 4: Hourly activity ---
 hourly_activity = (
     df.groupby('hour')
     .agg(total_events=('event_id', 'count'))
@@ -69,4 +70,4 @@ hourly_activity.to_parquet(f'{gold_dir}/hourly_activity.parquet', index=False)
 print("\n📊 Hourly Activity:")
 print(hourly_activity.to_string(index=False))
 
-print(f"\n✅ Gold layer selesai — 4 tabel bisnis siap dipakai!")
+print(f"\n✅ Gold layer complete — 4 business tables ready!")
