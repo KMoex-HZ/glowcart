@@ -26,14 +26,30 @@
 
 <header>
     <h1>GlowCart Analytics Dashboard</h1>
-    <p>Real-time e-commerce intelligence — powered by Kafka · Spark · dbt · DuckDB</p>
+    <p>E-commerce intelligence platform — Kafka · Spark · dbt · DuckDB · FastAPI</p>
 </header>
 
-<div class="stat-grid" id="stats">
-    <div class="stat"><div class="label">Total Revenue</div><div class="value" id="stat-revenue">—</div><div class="sub">from successful payments</div></div>
-    <div class="stat"><div class="label">Total Orders</div><div class="value" id="stat-orders">—</div><div class="sub">payment_success events</div></div>
-    <div class="stat"><div class="label">Conversion Rate</div><div class="value" id="stat-conv">—</div><div class="sub">page view → purchase</div></div>
-    <div class="stat"><div class="label">Top Category</div><div class="value" id="stat-cat">—</div><div class="sub">by revenue</div></div>
+<div class="stat-grid">
+    <div class="stat">
+        <div class="label">Total Revenue</div>
+        <div class="value" id="stat-revenue">—</div>
+        <div class="sub">from successful payments</div>
+    </div>
+    <div class="stat">
+        <div class="label">Total Orders</div>
+        <div class="value" id="stat-orders">—</div>
+        <div class="sub">payment_success events</div>
+    </div>
+    <div class="stat">
+        <div class="label">Conversion Rate</div>
+        <div class="value" id="stat-conv">—</div>
+        <div class="sub">page view → purchase</div>
+    </div>
+    <div class="stat">
+        <div class="label">Top Category</div>
+        <div class="value" id="stat-cat">—</div>
+        <div class="sub">by revenue</div>
+    </div>
 </div>
 
 <div class="grid">
@@ -57,7 +73,14 @@
 
 <script>
 const API = 'http://localhost:8000';
-const COLORS = ['#38bdf8','#34d399','#f472b6','#fb923c','#a78bfa','#facc15'];
+const COLORS = ['#38bdf8', '#34d399', '#f472b6', '#fb923c', '#a78bfa', '#facc15'];
+const CHART_OPTS = {
+    plugins: { legend: { display: false } },
+    scales: {
+        y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+        x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } }
+    }
+};
 
 async function fetchAll() {
     const [revenue, funnel, products, hourly] = await Promise.all([
@@ -70,12 +93,15 @@ async function fetchAll() {
     // Stats
     const totalRevenue = revenue.data.reduce((s, d) => s + d.total_revenue, 0);
     const totalOrders = revenue.data.reduce((s, d) => s + d.total_orders, 0);
-    const funnelData = funnel.data[0];
-    const convRate = funnelData ? (funnelData.conversion_rate_pct ?? '—') : '—';
     const topCat = revenue.data[0]?.product_category ?? '—';
 
-    document.getElementById('stat-revenue').textContent = 'Rp ' + (totalRevenue/1e6).toFixed(1) + 'M';
-    document.getElementById('stat-orders').textContent = totalOrders;
+    // Fix conversion rate — from funnel data directly
+    const pageViews = funnel.data.find(d => d.stage === 'page_view')?.count ?? 0;
+    const purchases = funnel.data.find(d => d.stage === 'payment_success')?.count ?? 0;
+    const convRate = pageViews > 0 ? ((purchases / pageViews) * 100).toFixed(1) : '0';
+
+    document.getElementById('stat-revenue').textContent = 'Rp ' + (totalRevenue / 1e6).toFixed(1) + 'M';
+    document.getElementById('stat-orders').textContent = totalOrders.toLocaleString();
     document.getElementById('stat-conv').textContent = convRate + '%';
     document.getElementById('stat-cat').textContent = topCat;
 
@@ -84,21 +110,21 @@ async function fetchAll() {
         type: 'bar',
         data: {
             labels: revenue.data.map(d => d.product_category),
-            datasets: [{ label: 'Revenue (Rp)', data: revenue.data.map(d => d.total_revenue), backgroundColor: COLORS }]
+            datasets: [{ data: revenue.data.map(d => d.total_revenue), backgroundColor: COLORS }]
         },
-        options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } }
+        options: CHART_OPTS
     });
 
-    // Funnel
-    const funnelStages = ['page_view','add_to_cart','checkout','payment_success'];
-    const funnelCounts = funnelStages.map(s => funnel.data.find(d => d.stage === s)?.count ?? 0);
+    // Conversion funnel
+    const stages = ['page_view', 'add_to_cart', 'checkout', 'payment_success'];
+    const counts = stages.map(s => funnel.data.find(d => d.stage === s)?.count ?? 0);
     new Chart(document.getElementById('funnelChart'), {
         type: 'bar',
         data: {
-            labels: funnelStages,
-            datasets: [{ label: 'Events', data: funnelCounts, backgroundColor: ['#38bdf8','#34d399','#f472b6','#a78bfa'] }]
+            labels: stages,
+            datasets: [{ data: counts, backgroundColor: ['#38bdf8', '#34d399', '#f472b6', '#a78bfa'] }]
         },
-        options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } }
+        options: CHART_OPTS
     });
 
     // Top products
@@ -106,23 +132,29 @@ async function fetchAll() {
         type: 'bar',
         data: {
             labels: products.data.map(d => d.product_name),
-            datasets: [{ label: 'Revenue (Rp)', data: products.data.map(d => d.total_revenue), backgroundColor: COLORS }]
+            datasets: [{ data: products.data.map(d => d.total_revenue), backgroundColor: COLORS }]
         },
-        options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } }
+        options: { ...CHART_OPTS, indexAxis: 'y' }
     });
 
-    // Hourly
+    // Hourly activity
     new Chart(document.getElementById('hourlyChart'), {
         type: 'line',
         data: {
             labels: hourly.data.map(d => `${d.hour}:00`),
-            datasets: [{ label: 'Events', data: hourly.data.map(d => d.total_events), borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.1)', fill: true, tension: 0.4 }]
+            datasets: [{
+                data: hourly.data.map(d => d.total_events),
+                borderColor: '#38bdf8',
+                backgroundColor: 'rgba(56,189,248,0.1)',
+                fill: true,
+                tension: 0.4
+            }]
         },
-        options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } } }
+        options: CHART_OPTS
     });
 }
 
-fetchAll().catch(console.error);
+fetchAll().catch(err => console.error('API Error:', err));
 </script>
 </body>
 </html>

@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import duckdb
-import os
 from datetime import datetime
 
 app = FastAPI(
@@ -19,11 +18,13 @@ app.add_middleware(
 
 GOLD_PATH = "/root/glowcart/storage/gold"
 
+
 def query_parquet(path: str, query: str):
     conn = duckdb.connect()
     result = conn.execute(query).fetchdf()
     conn.close()
     return result.to_dict(orient="records")
+
 
 @app.get("/")
 def root():
@@ -39,6 +40,7 @@ def root():
         ]
     }
 
+
 @app.get("/health")
 def health():
     return {
@@ -47,11 +49,13 @@ def health():
         "service": "GlowCart Data API"
     }
 
+
 @app.get("/api/revenue")
 def get_revenue():
     path = f"{GOLD_PATH}/revenue_by_category.parquet"
     data = query_parquet(path, f"SELECT * FROM read_parquet('{path}') ORDER BY total_revenue DESC")
     return {"data": data, "count": len(data)}
+
 
 @app.get("/api/funnel")
 def get_funnel():
@@ -59,11 +63,13 @@ def get_funnel():
     data = query_parquet(path, f"SELECT * FROM read_parquet('{path}')")
     return {"data": data, "count": len(data)}
 
+
 @app.get("/api/top-products")
 def get_top_products():
     path = f"{GOLD_PATH}/top_products.parquet"
     data = query_parquet(path, f"SELECT * FROM read_parquet('{path}') ORDER BY total_revenue DESC")
     return {"data": data, "count": len(data)}
+
 
 @app.get("/api/hourly-activity")
 def get_hourly_activity():
