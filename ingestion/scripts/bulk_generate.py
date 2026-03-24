@@ -91,5 +91,5 @@ for i in range(0, TARGET, batch_size):
     progress = (i + count) / TARGET * 100
     print(f"\r  Progress: {i+count:,}/{TARGET:,} events ({progress:.0f}%)", end='', flush=True)
 
-print(f"\n\n✅ Done! {TARGET:,} events sent to Kafka")
+print(f"\n\nDone! {TARGET:,} events sent to Kafka")
 print(f"   Simulated 7 days of realistic Indonesian e-commerce traffic")
