@@ -35,7 +35,7 @@ jobs:
         assert event['event_type'] in ['page_view','add_to_cart','checkout','payment_success','payment_failed']
         assert 'user' in event
         assert 'product' in event
-        print('✅ Event generator test passed')
+        print('Event generator test passed')
         "
 
     - name: Test data schema
@@ -57,7 +57,7 @@ jobs:
         assert df['event_id'].nunique() == 100
         assert df['event_type'].isin(['page_view','add_to_cart','checkout','payment_success','payment_failed']).all()
         assert df['user_id'].notna().all()
-        print(f'✅ Schema test passed — {len(df)} events validated')
+        print(f'Schema test passed — {len(df)} events validated')
         "
 
   lint:
@@ -78,4 +78,4 @@ jobs:
           --max-line-length=120 \
           --ignore=E501,W503,E302,E305,W291,W293,E226,E231,F401 \
           --exclude=__pycache__
-        echo "✅ Lint passed"
+        echo "Lint passed"
