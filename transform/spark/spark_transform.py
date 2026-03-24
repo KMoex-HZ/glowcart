@@ -26,7 +26,7 @@ df = spark.read.parquet(silver_path)
 print(f"Total records: {df.count()}")
 
 # --- Transform 1: Customer segmentation by city ---
-print("\n📊 Top 5 Cities by Revenue:")
+print("\nTop 5 Cities by Revenue:")
 city_stats = df.groupBy('user_city') \
     .agg(
         F.count('event_id').alias('total_events'),
@@ -41,7 +41,7 @@ city_stats = df.groupBy('user_city') \
 city_stats.show(truncate=False)
 
 # --- Transform 2: Product performance ---
-print("📊 Product Performance:")
+print("Product Performance:")
 product_perf = df.groupBy('product_name', 'product_category') \
     .agg(
         F.count(F.when(F.col('event_type') == 'page_view', 1)).alias('views'),
@@ -62,7 +62,7 @@ product_perf = df.groupBy('product_name', 'product_category') \
 product_perf.show(truncate=False)
 
 # --- Transform 3: Device & platform analysis ---
-print("📊 Device & Platform Analysis:")
+print("Device & Platform Analysis:")
 device_analysis = df.groupBy('device', 'platform') \
     .agg(
         F.count('event_id').alias('total_events'),
@@ -82,5 +82,5 @@ city_stats.toPandas().to_parquet(f'{output_base}/city_stats.parquet', index=Fals
 product_perf.toPandas().to_parquet(f'{output_base}/product_performance.parquet', index=False)
 device_analysis.toPandas().to_parquet(f'{output_base}/device_analysis.parquet', index=False)
 
-print("\n✅ Spark transform complete — results saved to Gold/spark/")
+print("\nSpark transform complete — results saved to Gold/spark/")
 spark.stop()
