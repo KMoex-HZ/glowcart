@@ -1,6 +1,6 @@
 # GlowCart — E-commerce Data Platform
 
-> End-to-end data engineering portfolio project simulating a real-time Indonesian e-commerce analytics platform.
+> End-to-end data engineering project simulating a real-time Indonesian e-commerce analytics platform.
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
 ![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-2.3-black)
@@ -13,46 +13,21 @@
 
 ## Overview
 
-**GlowCart** adalah portfolio project data engineering end-to-end yang mensimulasikan platform analytics e-commerce Indonesia secara real-time. Project ini dibangun untuk mendemonstrasikan kemampuan membangun data pipeline modern — mulai dari ingestion, transformasi, orchestration, hingga serving dan visualisasi.
+GlowCart simulates a real-time analytics platform for an Indonesian e-commerce app. User events — browsing, add to cart, checkout, payment — are streamed through **Apache Kafka**, processed across a **Medallion architecture (Bronze → Silver → Gold)** using **PySpark** and **dbt**, orchestrated by **Apache Airflow**, and served through a **FastAPI** backend with a live **Chart.js** dashboard.
 
-Pipeline dimulai dari simulasi event pengguna (browsing, tambah ke keranjang, checkout, pembayaran) yang di-stream lewat **Apache Kafka**, lalu diproses melalui arsitektur **Medallion (Bronze → Silver → Gold)** menggunakan **PySpark** dan **dbt**, diorchestrasi dengan **Apache Airflow**, dan akhirnya disajikan lewat **FastAPI** dan dashboard **Chart.js** yang bisa diakses secara langsung.
-
-Seluruh stack berjalan secara lokal menggunakan **Docker Compose**, sehingga mudah direproduksi tanpa infrastruktur cloud.
+The entire stack runs locally with **Docker Compose** — no cloud required.
 
 ---
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    A([🛒 E-commerce Events]) --> B
+![Architecture Diagram](assets/architecture.png)
 
-    subgraph Ingestion
-        B[[Apache Kafka\nStreaming]]
-    end
+---
 
-    subgraph Storage ["Storage — Medallion Architecture"]
-        direction LR
-        C[(Bronze\nRaw / S3)]
-        D[(Silver\nCleaned / Validated)]
-        E[(Gold\nAggregated / dbt)]
-        C --> D --> E
-    end
+## Dashboard
 
-    subgraph Orchestration
-        F{{Airflow DAG\nScheduling & Monitoring}}
-    end
-
-    subgraph Serving
-        G[FastAPI\nDuckDB]
-        H[Dashboard\nChart.js]
-        G --> H
-    end
-
-    B --> C
-    E --> F
-    E --> G
-```
+![Dashboard Preview](assets/dashboard.png)
 
 ---
 
@@ -65,7 +40,7 @@ flowchart LR
 | Transform | PySpark + dbt | Large-scale aggregations + SQL models |
 | Orchestration | Apache Airflow | Pipeline scheduling + monitoring |
 | Serving | FastAPI + DuckDB | Analytics API endpoints |
-| Visualization | Chart.js | Business intelligence dashboard |
+| Visualization | Chart.js | BI dashboard |
 | Infrastructure | Docker Compose | Local containerized environment |
 
 ---
@@ -89,35 +64,18 @@ glowcart/
 ├── serving/
 │   ├── api/            # FastAPI analytics endpoints
 │   └── dashboard/      # Chart.js business dashboard
+├── assets/             # Screenshots & diagrams
 └── docker-compose.yml  # Full stack infrastructure
-```
-
----
-
-## Data Pipeline
-
-```mermaid
-flowchart TD
-    A([Generate Events\nbulk_generate.py]) --> B[kafka_to_bronze.py]
-    B --> C[bronze_to_silver.py]
-    C --> D[silver_to_gold.py]
-    D --> E[dbt run]
-    E --> F([API + Dashboard\nReady])
-
-    style A fill:#6b7280,color:#fff,stroke:none
-    style F fill:#16a34a,color:#fff,stroke:none
 ```
 
 ---
 
 ## Quick Start
 
-### Prerequisites
+**Prerequisites**
 - Docker Desktop with WSL2 integration
 - Python 3.12+
 - Java 21 (for PySpark)
-
-### Run the full stack
 
 ```bash
 # 1. Start infrastructure
@@ -157,31 +115,15 @@ uvicorn serving.api.main:app --host 0.0.0.0 --port 8000
 
 ---
 
-## Data Model
+## Data Flow
 
-```mermaid
-flowchart LR
-    PV([page_view\n🔍 Product Browsing])
-    ATC([add_to_cart\n🛒 Cart Additions])
-    CO([checkout\n📋 Checkout Initiated])
-    PS([payment_success\n✅ Successful Transaction])
-    PF([payment_failed\n❌ Failed Payment])
-
-    PV --> ATC --> CO --> PS
-    CO --> PF
 ```
-
----
-
-## Key Features
-
-- **Real-time streaming** — Kafka producer simulates live Indonesian e-commerce events
-- **Medallion architecture** — Bronze / Silver / Gold data lakehouse pattern
-- **Data quality** — Automated dbt tests (uniqueness, not-null, accepted values)
-- **Scalable transforms** — PySpark for large-scale aggregations
-- **Orchestration** — Airflow DAG with 6-task daily pipeline
-- **Analytics API** — FastAPI with auto-generated Swagger documentation
-- **BI Dashboard** — Dark-theme real-time dashboard with Chart.js
+Generate Events → Kafka → Bronze → Silver → Gold → FastAPI → Dashboard
+                                      ↑
+                               PySpark + dbt
+                                      ↑
+                                   Airflow
+```
 
 ---
 
