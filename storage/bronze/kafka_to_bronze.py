@@ -50,7 +50,7 @@ if events:
     output_path = f'/root/glowcart/storage/bronze/events/date={date_str}/events.parquet'
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     df.to_parquet(output_path, index=False)
-    print(f"\n✅ Saved {len(df)} events to Bronze layer")
+    print(f"\nSaved {len(df)} events to Bronze layer")
     print(f"   Path: {output_path}")
     print(f"\nDataFrame schema:")
     print(df.dtypes)
