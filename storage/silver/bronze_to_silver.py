@@ -21,21 +21,21 @@ df['timestamp'] = pd.to_datetime(df['timestamp'])
 df['ingested_at'] = pd.to_datetime(df['ingested_at'])
 df['hour'] = df['timestamp'].dt.hour
 df['date'] = df['timestamp'].dt.date
-print(f"  Timestamps converted to datetime ✅")
+print(f"  Timestamps converted to datetime")
 
 df['quantity'] = df['quantity'].fillna(0).astype(int)
 df['total_amount'] = df['total_amount'].fillna(0).astype(int)
-print(f"  Null values filled ✅")
+print(f"  Null values filled")
 
 df['is_transaction'] = df['event_type'].isin(
     ['add_to_cart', 'checkout', 'payment_success', 'payment_failed']
 )
-print(f"  is_transaction column added ✅")
+print(f"  is_transaction column added")
 
 silver_path = f'{silver_dir}/events.parquet'
 df.to_parquet(silver_path, index=False)
 
-print(f"\n✅ Silver layer saved: {len(df)} records")
+print(f"\nSilver layer saved: {len(df)} records")
 print(f"   Path: {silver_path}")
 print(f"\nSilver schema:")
 print(df.dtypes)
