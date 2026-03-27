@@ -1,4 +1,4 @@
-# GlowCart — Production-Grade E-commerce Data Platform
+# GlowCart — Production-Inspired E-commerce Data Platform
 
 > End-to-end data engineering platform simulating a real-time Indonesian e-commerce analytics pipeline — Built with production engineering practices: DLQ, idempotency, data quality gating, and ADRs
 
