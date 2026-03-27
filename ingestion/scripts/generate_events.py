@@ -78,4 +78,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nGenerator stopped.")
 
-    print(f"\nCompleted generating samples.")
+    print("\nCompleted generating samples.")
