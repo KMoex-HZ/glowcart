@@ -1,8 +1,14 @@
+-- Revenue Performance Mart
+-- Purpose: Aggregates daily sales performance at the Product and Category level.
+-- Grain: Date | Product Category | Product Name
+
 with events as (
+    -- Import validated staging events
     select * from {{ ref('stg_events') }}
 ),
 
-revenue as (
+revenue_metrics as (
+    -- Calculate key financial metrics for successful transactions only
     select
         date,
         product_category,
@@ -13,8 +19,9 @@ revenue as (
         sum(quantity) as total_units_sold
     from events
     where event_type = 'payment_success'
-    group by date, product_category, product_name
+    group by 1, 2, 3
 )
 
-select * from revenue
+-- Final output ordered by highest impact (revenue)
+select * from revenue_metrics
 order by total_revenue desc

@@ -2,9 +2,14 @@ from kafka import KafkaProducer
 from faker import Faker
 import json
 import random
+import sys
 from datetime import datetime, timedelta
 
+# --- Constants & Mock Data ---
 fake = Faker('id_ID')
+TOPIC = 'glowcart-events'
+BOOTSTRAP_SERVERS = 'localhost:9092'
+TARGET_EVENTS = 10000
 
 PRODUCTS = [
     {"id": "P001", "name": "Sepatu Lari Nike", "price": 850000, "category": "Fashion"},
@@ -27,7 +32,11 @@ CITIES = [
     "Bogor", "Yogyakarta", "Malang", "Bandar Lampung", "Padang"
 ]
 
-def get_hour_weight(hour):
+def get_hour_weight(hour: int) -> int:
+    """
+    Returns a probability weight for a given hour to simulate 
+    realistic daily traffic spikes (e.g., peak at 10 AM and 7 PM).
+    """
     weights = {
         0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 2,
         6: 4, 7: 6, 8: 8, 9: 9, 10: 10, 11: 10,
@@ -36,10 +45,13 @@ def get_hour_weight(hour):
     }
     return weights.get(hour, 5)
 
-def generate_event(hours_ago=0):
+def generate_event(hours_ago: float = 0):
+    """
+    Generates a single synthetic e-commerce event with localized data.
+    """
     event_time = datetime.now() - timedelta(hours=hours_ago)
-    hour = event_time.hour
-
+    
+    # Weighted selection for event types to mimic funnel conversion
     event_type = random.choices(
         ["page_view", "add_to_cart", "checkout", "payment_success", "payment_failed"],
         weights=[50, 25, 12, 10, 3]
@@ -68,28 +80,39 @@ def generate_event(hours_ago=0):
         "total_amount": total,
     }
 
-producer = KafkaProducer(
-    bootstrap_servers='localhost:9092',
-    value_serializer=lambda v: json.dumps(v, ensure_ascii=False).encode('utf-8')
-)
+def main():
+    producer = KafkaProducer(
+        bootstrap_servers=BOOTSTRAP_SERVERS,
+        value_serializer=lambda v: json.dumps(v, ensure_ascii=False).encode('utf-8')
+    )
 
-TARGET = 10000
-print(f"Generating {TARGET:,} events...")
-print("Simulating 7 days of traffic...\n")
+    print(f"Starting bulk simulation: {TARGET_EVENTS:,} events")
+    print("Scenario: 7 days of historical Indonesian traffic data\n")
 
-batch_size = 100
-for i in range(0, TARGET, batch_size):
-    hours_ago = random.uniform(0, 168)
-    weight = get_hour_weight(int(hours_ago % 24))
-    count = min(batch_size, TARGET - i)
+    batch_size = 100
+    try:
+        for i in range(0, TARGET_EVENTS, batch_size):
+            # Simulate random time within the last 7 days (168 hours)
+            hours_ago = random.uniform(0, 168)
+            count = min(batch_size, TARGET_EVENTS - i)
 
-    for j in range(count):
-        event = generate_event(hours_ago=hours_ago)
-        producer.send('glowcart-events', value=event)
+            for _ in range(count):
+                event = generate_event(hours_ago=hours_ago)
+                producer.send(TOPIC, value=event)
 
-    producer.flush()
-    progress = (i + count) / TARGET * 100
-    print(f"\r  Progress: {i+count:,}/{TARGET:,} events ({progress:.0f}%)", end='', flush=True)
+            producer.flush()
+            
+            # Progress tracking
+            progress = (i + count) / TARGET_EVENTS * 100
+            sys.stdout.write(f"\rProgress: {i+count:,}/{TARGET_EVENTS:,} events ({progress:.0f}%)")
+            sys.stdout.flush()
 
-print(f"\n\nDone! {TARGET:,} events sent to Kafka")
-print(f"   Simulated 7 days of realistic Indonesian e-commerce traffic")
+        print(f"\n\nSuccess! Simulated traffic successfully pushed to Kafka.")
+        
+    except KeyboardInterrupt:
+        print("\nSimulation interrupted by user.")
+    finally:
+        producer.close()
+
+if __name__ == "__main__":
+    main()

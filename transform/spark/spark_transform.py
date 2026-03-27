@@ -3,8 +3,10 @@ from pyspark.sql import functions as F
 from datetime import datetime
 import os
 
+# Set Python environment for Spark executors
 os.environ['PYSPARK_PYTHON'] = '/root/glowcart/.venv/bin/python3'
 
+# Initialize Spark Session with performance optimizations
 spark = SparkSession.builder \
     .appName("GlowCart-Transform") \
     .config("spark.sql.adaptive.enabled", "true") \
@@ -12,21 +14,22 @@ spark = SparkSession.builder \
     .config("spark.sql.ansi.enabled", "false") \
     .getOrCreate()
 
+# Suppress verbose logs for cleaner output
 spark.sparkContext.setLogLevel("ERROR")
 
-print("=" * 50)
-print("GlowCart PySpark Transform Job")
-print("=" * 50)
+print("GlowCart PySpark Transformation Engine")
+print("-" * 40)
 
+# Environment & Path setup
 date_str = datetime.now().strftime('%Y%m%d')
 silver_path = f'/root/glowcart/storage/silver/events/date={date_str}/events.parquet'
 
-print(f"\nReading Silver layer...")
+print(f"Loading Silver layer data for: {date_str}")
 df = spark.read.parquet(silver_path)
-print(f"Total records: {df.count()}")
+print(f"Record Count: {df.count()}")
 
-# --- Transform 1: Customer segmentation by city ---
-print("\nTop 5 Cities by Revenue:")
+# Analysis 1: Geographic Performance (City Segmentation)
+# Purpose: Identifying top revenue-generating regions
 city_stats = df.groupBy('user_city') \
     .agg(
         F.count('event_id').alias('total_events'),
@@ -38,10 +41,12 @@ city_stats = df.groupBy('user_city') \
     ) \
     .orderBy(F.col('total_revenue').desc()) \
     .limit(5)
+
+print("\n[INFO] Top 5 Cities by Revenue Calculated.")
 city_stats.show(truncate=False)
 
-# --- Transform 2: Product performance ---
-print("Product Performance:")
+# Analysis 2: Product Conversion & Performance
+# Purpose: Tracking funnel conversion from views to purchases per product
 product_perf = df.groupBy('product_name', 'product_category') \
     .agg(
         F.count(F.when(F.col('event_type') == 'page_view', 1)).alias('views'),
@@ -59,10 +64,12 @@ product_perf = df.groupBy('product_name', 'product_category') \
         )
     ) \
     .orderBy(F.col('revenue').desc())
+
+print("[INFO] Product Performance & Conversion Metrics Ready.")
 product_perf.show(truncate=False)
 
-# --- Transform 3: Device & platform analysis ---
-print("Device & Platform Analysis:")
+# Analysis 3: Infrastructure breakdown (Device & Platform)
+# Purpose: Understanding user tech-stack distribution
 device_analysis = df.groupBy('device', 'platform') \
     .agg(
         F.count('event_id').alias('total_events'),
@@ -72,15 +79,19 @@ device_analysis = df.groupBy('device', 'platform') \
         ).alias('revenue')
     ) \
     .orderBy(F.col('total_events').desc())
+
+print("[INFO] Tech-stack Distribution Analysis Completed.")
 device_analysis.show(truncate=False)
 
-# --- Save results to Gold layer ---
+# Materialization to Gold Layer (Spark Output)
 output_base = '/root/glowcart/storage/gold/spark'
 os.makedirs(output_base, exist_ok=True)
 
+# Persisting small aggregated results as Parquet for API consumption
 city_stats.toPandas().to_parquet(f'{output_base}/city_stats.parquet', index=False)
 product_perf.toPandas().to_parquet(f'{output_base}/product_performance.parquet', index=False)
 device_analysis.toPandas().to_parquet(f'{output_base}/device_analysis.parquet', index=False)
 
-print("\nSpark transform complete — results saved to Gold/spark/")
+print("-" * 40)
+print(f"Spark Job Successful. Gold tables persisted in: {output_base}")
 spark.stop()

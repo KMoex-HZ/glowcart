@@ -1,5 +1,7 @@
 version: '3.8'
 
+# --- Service Templates (DRY) ---
+# Common Airflow configurations shared across all components
 x-airflow-common: &airflow-common
   image: apache/airflow:2.9.0
   environment:
@@ -18,6 +20,7 @@ x-airflow-common: &airflow-common
       condition: service_healthy
 
 services:
+  # --- Messaging Tier ---
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: glowcart-zookeeper
@@ -39,6 +42,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
 
+  # --- Storage & Orchestration Tier ---
   postgres:
     image: postgres:13
     container_name: glowcart-postgres
@@ -56,10 +60,7 @@ services:
     container_name: glowcart-airflow-init
     command: version
     environment:
-      &airflow-init-env
-      AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      <<: *airflow-common
       _AIRFLOW_DB_MIGRATE: 'true'
       _AIRFLOW_WWW_USER_CREATE: 'true'
       _AIRFLOW_WWW_USER_USERNAME: admin

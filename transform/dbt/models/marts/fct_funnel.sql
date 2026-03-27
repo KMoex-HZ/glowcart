@@ -1,8 +1,14 @@
+-- Conversion Funnel Transformation
+-- Purpose: Aggregates daily e-commerce events into a funnel format 
+-- and calculates stage-to-stage conversion rates.
+
 with events as (
+    -- Import raw staging events
     select * from {{ ref('stg_events') }}
 ),
 
-funnel as (
+funnel_counts as (
+    -- Aggregate event counts per day using conditional aggregation
     select
         date,
         count(case when event_type = 'page_view' then 1 end) as page_views,
@@ -11,10 +17,12 @@ funnel as (
         count(case when event_type = 'payment_success' then 1 end) as purchases,
         count(case when event_type = 'payment_failed' then 1 end) as failed_payments
     from events
-    group by date
+    group by 1
 ),
 
-with_rates as (
+funnel_metrics as (
+    -- Calculate stage-over-stage conversion rates
+    -- Uses nullif() to prevent division by zero errors during low traffic periods
     select
         date,
         page_views,
@@ -25,7 +33,8 @@ with_rates as (
         round(add_to_carts * 100.0 / nullif(page_views, 0), 1) as cart_rate_pct,
         round(checkouts * 100.0 / nullif(add_to_carts, 0), 1) as checkout_rate_pct,
         round(purchases * 100.0 / nullif(checkouts, 0), 1) as purchase_rate_pct
-    from funnel
+    from funnel_counts
 )
 
-select * from with_rates
+-- Final output selection
+select * from funnel_metrics

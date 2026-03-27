@@ -4,6 +4,7 @@ import random
 import time
 from datetime import datetime
 
+# --- Mock Data & Constants ---
 fake = Faker('id_ID')
 
 PRODUCTS = [
@@ -17,8 +18,10 @@ PRODUCTS = [
     {"id": "P008", "name": "Minyak Goreng 2L", "price": 35000, "category": "Food"},
 ]
 
-
-def generate_user():
+def generate_user() -> dict:
+    """
+    Generates a synthetic user profile with Indonesian localization.
+    """
     return {
         "user_id": fake.uuid4(),
         "name": fake.name(),
@@ -27,13 +30,21 @@ def generate_user():
         "age": random.randint(18, 55),
     }
 
-
-def generate_event(user):
+def generate_event(user: dict) -> dict:
+    """
+    Generates a synthetic e-commerce event for a given user.
+    """
     product = random.choice(PRODUCTS)
+    
+    # Simulating funnel: Most events are page views, fewer are successful payments
     event_type = random.choices(
         ["page_view", "add_to_cart", "checkout", "payment_success", "payment_failed"],
         weights=[50, 25, 12, 10, 3]
     )[0]
+
+    # Logic: quantity and amount are only relevant for conversion-type events
+    quantity = random.randint(1, 5) if event_type != "page_view" else None
+    total_amount = (product["price"] * quantity) if quantity else None
 
     return {
         "event_id": fake.uuid4(),
@@ -41,23 +52,30 @@ def generate_event(user):
         "timestamp": datetime.now().isoformat(),
         "user": user,
         "product": product,
-        "quantity": random.randint(1, 5) if event_type != "page_view" else None,
-        "total_amount": product["price"] * random.randint(1, 5) if event_type != "page_view" else None,
+        "quantity": quantity,
+        "total_amount": total_amount,
         "session_id": fake.uuid4(),
         "device": random.choice(["mobile", "desktop", "tablet"]),
         "platform": random.choice(["android", "ios", "web"]),
     }
 
-
 if __name__ == "__main__":
-    print("GlowCart event generator started...")
-    print("Generating e-commerce events:\n")
+    print("GlowCart event generator initialized...")
+    print("Running sample output (10 events):\n")
 
-    for i in range(10):
-        user = generate_user()
-        event = generate_event(user)
-        print(json.dumps(event, indent=2, ensure_ascii=False))
-        print("-" * 50)
-        time.sleep(0.5)
+    try:
+        for i in range(1, 11):
+            user = generate_user()
+            event = generate_event(user)
+            
+            # Formatted log for terminal monitoring
+            print(f"[{i}] {event['timestamp']} | {event['event_type']} | {event['user']['name']} | {event['product']['name']}")
+            
+            # Uncomment for full JSON debugging
+            # print(json.dumps(event, indent=2, ensure_ascii=False))
+            
+            time.sleep(0.3)
+    except KeyboardInterrupt:
+        print("\nGenerator stopped.")
 
-    print("\nDone! Generated 10 events.")
+    print(f"\nCompleted generating samples.")
