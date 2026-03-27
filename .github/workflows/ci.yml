@@ -7,24 +7,26 @@ on:
     branches: [ main ]
 
 jobs:
+  # --- Automated Testing Suite ---
   test:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: "Source: Checkout Repository"
       uses: actions/checkout@v4
 
-    - name: Set up Python 3.12
+    - name: "Env: Initialize Python 3.12"
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
 
-    - name: Install dependencies
+    - name: "Env: Install Project Dependencies"
       run: |
         python -m pip install --upgrade pip
         pip install pandas pyarrow faker duckdb
 
-    - name: Test event generator
+    - name: "Test: Event Generator Logic"
+      # Validates the dictionary structure and mandatory event types
       run: |
         python3 -c "
         from ingestion.scripts.generate_events import generate_user, generate_event
@@ -35,10 +37,11 @@ jobs:
         assert event['event_type'] in ['page_view','add_to_cart','checkout','payment_success','payment_failed']
         assert 'user' in event
         assert 'product' in event
-        print('Event generator test passed')
+        print('Event generator logic verified.')
         "
 
-    - name: Test data schema
+    - name: "Test: Data Schema & Integrity"
+      # Regression test to ensure event generation remains consistent across 100 samples
       run: |
         python3 -c "
         from ingestion.scripts.generate_events import generate_user, generate_event
@@ -57,25 +60,28 @@ jobs:
         assert df['event_id'].nunique() == 100
         assert df['event_type'].isin(['page_view','add_to_cart','checkout','payment_success','payment_failed']).all()
         assert df['user_id'].notna().all()
-        print(f'Schema test passed — {len(df)} events validated')
+        print(f'Schema validation successful: {len(df)} records checked.')
         "
 
+  # --- Code Quality Enforcement ---
   lint:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v4
+    - name: "Source: Checkout Repository"
+      uses: actions/checkout@v4
+
+    - name: "Env: Initialize Python 3.12"
+      uses: actions/setup-python@v4
       with:
         python-version: '3.12'
 
-    - name: Install flake8
-      run: pip install flake8
-
-    - name: Lint with flake8
+    - name: "Lint: Code Style Enforcement (flake8)"
+      # Ensures codebase follows a baseline style guide before merging
       run: |
+        pip install flake8
         flake8 ingestion/scripts/generate_events.py serving/api/main.py \
           --max-line-length=120 \
           --ignore=E501,W503,E302,E305,W291,W293,E226,E231,F401 \
           --exclude=__pycache__
-        echo "Lint passed"
+        echo "Linter checks passed."
