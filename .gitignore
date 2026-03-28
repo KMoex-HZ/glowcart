@@ -27,3 +27,4 @@ orchestration/airflow/
 # OS
 .DS_Store
 Thumbs.db
+transform/dbt/target/
