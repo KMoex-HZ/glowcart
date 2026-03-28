@@ -29,7 +29,7 @@ silver_path = f'/root/glowcart/storage/silver/events/date={date_str}/events.parq
 
 logger.info(f"Loading Silver layer data for: {date_str}")
 df = spark.read.parquet(silver_path)
-print(f"Record Count: {df.count()}")
+logger.info(f"Record Count: {df.count()}")
 
 # Analysis 1: Geographic Performance (City Segmentation)
 # Purpose: Identifying top revenue-generating regions
@@ -45,7 +45,7 @@ city_stats = df.groupBy('user_city') \
     .orderBy(F.col('total_revenue').desc()) \
     .limit(5)
 
-print("\n[INFO] Top 5 Cities by Revenue Calculated.")
+logger.info("Top 5 Cities by Revenue Calculated.")
 city_stats.show(truncate=False)
 
 # Analysis 2: Product Conversion & Performance
@@ -68,7 +68,7 @@ product_perf = df.groupBy('product_name', 'product_category') \
     ) \
     .orderBy(F.col('revenue').desc())
 
-print("[INFO] Product Performance & Conversion Metrics Ready.")
+logger.info("Product Performance & Conversion Metrics Ready.")
 product_perf.show(truncate=False)
 
 # Analysis 3: Infrastructure breakdown (Device & Platform)
@@ -83,7 +83,7 @@ device_analysis = df.groupBy('device', 'platform') \
     ) \
     .orderBy(F.col('total_events').desc())
 
-print("[INFO] Tech-stack Distribution Analysis Completed.")
+logger.info("Tech-stack Distribution Analysis Completed.")
 device_analysis.show(truncate=False)
 
 # Materialization to Gold Layer (Spark Output)
