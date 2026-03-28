@@ -2,6 +2,9 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from datetime import datetime
 import os
+from utils.logger import get_logger
+
+logger = get_logger("spark")
 
 # Set Python environment for Spark executors
 os.environ['PYSPARK_PYTHON'] = '/root/glowcart/.venv/bin/python3'
@@ -17,14 +20,14 @@ spark = SparkSession.builder \
 # Suppress verbose logs for cleaner output
 spark.sparkContext.setLogLevel("ERROR")
 
-print("GlowCart PySpark Transformation Engine")
-print("-" * 40)
+logger.info("GlowCart PySpark Transformation Engine")
+logger.info("-" * 40)
 
 # Environment & Path setup
 date_str = datetime.now().strftime('%Y%m%d')
 silver_path = f'/root/glowcart/storage/silver/events/date={date_str}/events.parquet'
 
-print(f"Loading Silver layer data for: {date_str}")
+logger.info(f"Loading Silver layer data for: {date_str}")
 df = spark.read.parquet(silver_path)
 print(f"Record Count: {df.count()}")
 
@@ -92,6 +95,6 @@ city_stats.toPandas().to_parquet(f'{output_base}/city_stats.parquet', index=Fals
 product_perf.toPandas().to_parquet(f'{output_base}/product_performance.parquet', index=False)
 device_analysis.toPandas().to_parquet(f'{output_base}/device_analysis.parquet', index=False)
 
-print("-" * 40)
-print(f"Spark Job Successful. Gold tables persisted in: {output_base}")
+logger.info("-" * 40)
+logger.info(f"Spark Job Successful. Gold tables persisted in: {output_base}")
 spark.stop()
