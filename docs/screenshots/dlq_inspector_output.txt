@@ -1,0 +1,24 @@
+============================================================
+  GlowCart — DLQ Inspector
+  Topic: glowcart-events.dlq
+  Run at: 2026-03-29 01:56:54
+============================================================
+
+Total DLQ events: 7
+
+Error breakdown:
+  missing_field:product                    4 events
+  missing_field:total_amount               4 events
+  missing_field:event_type                 3 events
+  missing_field:user                       3 events
+  missing_field:user.name                  1 events
+  missing_field:product.name               1 events
+
+Last 5 events:
+  [2026-03-28T18:55:56.881584+00:00] errors=['missing_field:event_type', 'missing_field:total_amount'] offset=10002
+  [2026-03-28T18:55:56.883330+00:00] errors=['missing_field:user.name'] offset=10004
+  [2026-03-28T18:55:56.884932+00:00] errors=['missing_field:product.name'] offset=10005
+  [2026-03-28T18:55:56.886401+00:00] errors=['missing_field:event_type', 'missing_field:user', 'missing_field:product'] offset=10006
+  [2026-03-28T18:55:56.887809+00:00] errors=['missing_field:product', 'missing_field:total_amount'] offset=10007
+
+============================================================

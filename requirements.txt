@@ -1,4 +1,4 @@
-# Data Quality
+# Data Quality (evaluated; custom pandas used instead — see docs/adr/ADR-003)
 great_expectations==1.15.1
 
 # Orchestration

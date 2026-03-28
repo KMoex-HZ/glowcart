@@ -1,7 +1,7 @@
 # ADR-001: Parquet as Storage Format
 
 **Status:** Accepted  
-**Date:** 2025-03-27  
+**Date:** 2026-03-25  
 **Author:** Khairunnisa Maharani
 
 ## Context

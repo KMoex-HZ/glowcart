@@ -1,7 +1,7 @@
 # ADR-005: File-based Idempotency for Pipeline Stages
 
 **Status:** Accepted  
-**Date:** 2025-03-27  
+**Date:** 2026-03-29  
 **Author:** Khairunnisa Maharani
 
 ## Context

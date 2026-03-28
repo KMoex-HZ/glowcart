@@ -1,7 +1,7 @@
 # ADR-002: DuckDB as the Serving Layer Query Engine
 
 **Status:** Accepted  
-**Date:** 2025-03-27  
+**Date:** 2026-03-25  
 **Author:** Khairunnisa Maharani
 
 ## Context

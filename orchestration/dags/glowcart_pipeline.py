@@ -1,9 +1,11 @@
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
+import logging
 
-# --- Pipeline Configurations ---
-# Using standard production retries and delays
+def sla_miss_callback(dag, task_list, blocking_task_list, slas, blocking_tis):
+    logging.error(f"SLA MISSED — DAG: {dag.dag_id} | Tasks: {[s.task_id for s in slas]}")
+
 default_args = {
     'owner': 'glowcart',
     'depends_on_past': False,
@@ -11,53 +13,47 @@ default_args = {
     'email_on_failure': False,
     'retries': 2,
     'retry_delay': timedelta(minutes=5),
+    'sla': timedelta(hours=2),
 }
 
 with DAG(
     'glowcart_daily_pipeline',
     default_args=default_args,
     description='End-to-end Data Pipeline for GlowCart E-Commerce Analytics',
-    schedule='0 6 * * *',  # Updated to modern 'schedule' parameter
+    schedule='0 6 * * *',
     catchup=False,
+    sla_miss_callback=sla_miss_callback,
     tags=['glowcart', 'ingestion', 'transformation', 'dbt'],
 ) as dag:
 
-    # Task 1: Data Ingestion Layer (Kafka Producer)
-    # Note: Replace 'echo' with actual command like 'python3 /path/to/script.py'
     generate_events = BashOperator(
         task_id='generate_events',
-        bash_command='echo "Generating e-commerce events and streaming to Kafka..."',
+        bash_command='cd /root/glowcart && source .venv/bin/activate && python3 ingestion/scripts/bulk_generate.py',
     )
 
-    # Task 2: Bronze Layer (Raw Data Ingestion to Parquet)
     bronze_ingestion = BashOperator(
         task_id='bronze_ingestion',
-        bash_command='echo "Ingesting data from Kafka to Bronze Parquet storage..."',
+        bash_command='cd /root/glowcart && source .venv/bin/activate && python3 -m storage.bronze.kafka_to_bronze',
     )
 
-    # Task 3: Silver Layer (Data Cleaning & Quality Validation)
     silver_transform = BashOperator(
         task_id='silver_transform',
-        bash_command='echo "Running custom pandas validation and Silver layer transformation..."',
+        bash_command='cd /root/glowcart && source .venv/bin/activate && python3 -m storage.silver.bronze_to_silver',
     )
 
-    # Task 4: Gold Layer (Business Logic Aggregation)
     gold_aggregation = BashOperator(
         task_id='gold_aggregation',
-        bash_command='echo "Aggregating metrics into Gold layer tables..."',
+        bash_command='cd /root/glowcart && source .venv/bin/activate && python3 -m storage.gold.silver_to_gold',
     )
 
-    # Task 5: Analytics Engineering (dbt Models)
     dbt_run = BashOperator(
         task_id='dbt_run',
-        bash_command='echo "Executing dbt models: fct_revenue, fct_funnel..."',
+        bash_command='cd /root/glowcart/transform/dbt && source /root/glowcart/.venv/bin/activate && dbt run',
     )
 
-    # Task 6: Data Quality Assurance (dbt Tests)
     dbt_test = BashOperator(
         task_id='dbt_test',
-        bash_command='echo "Running dbt data quality assertions..."',
+        bash_command='cd /root/glowcart/transform/dbt && source /root/glowcart/.venv/bin/activate && dbt test',
     )
 
-    # Define linear dependency chain
     generate_events >> bronze_ingestion >> silver_transform >> gold_aggregation >> dbt_run >> dbt_test
