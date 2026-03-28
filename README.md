@@ -3,7 +3,7 @@
 > End-to-end data engineering platform simulating a real-time Indonesian e-commerce analytics pipeline — Built with production engineering practices: DLQ, idempotency, data quality gating, and ADRs
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)
-![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-3.x-231F20?style=flat-square&logo=apachekafka&logoColor=white)
+![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-3.5-231F20?style=flat-square&logo=apachekafka&logoColor=white)
 ![Apache Spark](https://img.shields.io/badge/Apache%20Spark-4.1-E25A1C?style=flat-square&logo=apachespark&logoColor=white)
 ![dbt](https://img.shields.io/badge/dbt-1.11-FF694B?style=flat-square&logo=dbt&logoColor=white)
 ![Airflow](https://img.shields.io/badge/Airflow-2.9-017CEE?style=flat-square&logo=apacheairflow&logoColor=white)
