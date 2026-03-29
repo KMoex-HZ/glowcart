@@ -2,7 +2,7 @@
 
 **Document:** PIPELINE_FAILURE.md  
 **Scope:** GlowCart data pipeline — Bronze ingestion, Silver transformation, Gold aggregation  
-**Last Updated:** 2025-04-01
+**Last Updated:** 2026-03-28
 
 ---
 
