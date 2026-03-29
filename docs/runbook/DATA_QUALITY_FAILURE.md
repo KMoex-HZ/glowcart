@@ -2,7 +2,7 @@
 
 **Document:** DATA_QUALITY_FAILURE.md  
 **Scope:** Great Expectations validation at the Silver layer  
-**Last Updated:** 2025-04-01
+**Last Updated:** 2026-03-28
 
 ---
 
