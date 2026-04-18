@@ -23,6 +23,16 @@ The entire stack runs locally with **Docker Compose** — no cloud required.
 
 ---
 
+### 🤖 Engineering Approach: AI-Augmented Development
+This project was built using an **AI-augmented engineering workflow**. Rather than just writing code, I acted as the **System Architect**, using AI as a high-velocity pair programmer to:
+* **Reverse-engineer** industry-standard roadmaps into a working local environment.
+* **Generate boilerplate** for complex integrations (Kafka-Spark-Airflow).
+* **Validate and Debug** architectural decisions (DLQ, Idempotency) against production best practices.
+
+**Why this matters:** I focused on the *why* and the *system design*, ensuring every line of code serves a reliable, production-grade purpose.
+
+---
+
 ## Architecture Overview
 
 ```
